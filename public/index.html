@@ -27,7 +27,11 @@
         <div class="hero-contenido">
             <h1>Tu ayuda transforma vidas</h1>
             <p>Conocé el impacto de tu colaboración y sumate a nuestra misión para mejorar la atención de toda la comunidad.</p>
-            <button id="btnAbrirModal" class="btn-donar">Realizar una Donación</button>
+            
+            <div class="hero-botones">
+                <button id="btnAbrirModal" class="btn-donar">Realizar una Donación</button>
+                <button id="btnAccesoPersonal" class="btn-donar">Panel de Gestión</button>
+            </div>
         </div>
     </section>
 
@@ -160,6 +164,20 @@
 
                 <button type="submit" class="btn-enviar">Confirmar Intención de Donación</button>
             </form>
+        </div>
+    </div>
+    <div id="modalLoginAdmin" class="modal-overlay">
+        <div class="modal-content-admin">
+            <span class="btn-cerrar" id="btnCerrarLogin">&times;</span>
+            <h2>Acceso al Personal</h2>
+            <p class="modal-subtitulo">Ingrese la contraseña para acceder al Panel de Gestión.</p>
+            
+            <div class="form-grupo">
+                <label for="passAdmin">Contraseña</label>
+                <input type="password" id="passAdmin" placeholder="••••••••">
+            </div>
+            
+            <button id="btnConfirmarAdmin" class="btn-donar" style="width: 100%; margin-top: 10px;">Ingresar</button>
         </div>
     </div>
 

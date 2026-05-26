@@ -115,3 +115,73 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 });
+// Esperamos a que el DOM esté listo para asignarle el evento al nuevo botón
+document.addEventListener('DOMContentLoaded', () => {
+    // ... Tu código actual que abre y cierra el modal de donaciones se queda como está ...
+
+    // Nueva lógica para el botón del personal
+    const btnPersonal = document.getElementById('btnAccesoPersonal');
+    if (btnPersonal) {
+        btnPersonal.addEventListener('click', () => {
+            const clave = prompt("Ingrese la contraseña de acceso del personal:");
+            if (clave === "HospitalGuemes2026") {
+                window.location.href = "admin.html"; // Redirige al panel de gestión
+            } else if (clave !== null) {
+                alert("Contraseña incorrecta. Acceso denegado.");
+            }
+        });
+    }
+});
+// ==========================================================================
+// CÓDIGO INDEPENDIENTE PARA EL MODAL DE ACCESO AL PERSONAL
+// ==========================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    const btnPersonal = document.getElementById('btnAccesoPersonal');
+    const modalLoginAdmin = document.getElementById('modalLoginAdmin');
+    const btnCerrarLogin = document.getElementById('btnCerrarLogin');
+    const btnConfirmarAdmin = document.getElementById('btnConfirmarAdmin');
+    const inputPass = document.getElementById('passAdmin');
+
+    // Abrir el modal usando display flex directo para no depender de clases CSS
+    if (btnPersonal && modalLoginAdmin) {
+        btnPersonal.addEventListener('click', () => {
+            if (inputPass) inputPass.value = ""; 
+            modalLoginAdmin.style.display = 'flex'; 
+        });
+    }
+
+    // Cerrar desde la "X"
+    if (btnCerrarLogin && modalLoginAdmin) {
+        btnCerrarLogin.addEventListener('click', () => {
+            modalLoginAdmin.style.display = 'none';
+        });
+    }
+
+    // Cerrar si hacen clic afuera en el fondo oscuro
+    if (modalLoginAdmin) {
+        modalLoginAdmin.addEventListener('click', (e) => {
+            if (e.target === modalLoginAdmin) {
+                modalLoginAdmin.style.display = 'none';
+            }
+        });
+    }
+
+    // Validar contraseña
+    if (btnConfirmarAdmin && inputPass) {
+        btnConfirmarAdmin.addEventListener('click', () => {
+            if (inputPass.value === "HospitalGuemes2026") {
+                modalLoginAdmin.style.style.display = 'none';
+                window.location.href = "admin.html"; 
+            } else {
+                alert("Contraseña incorrecta. Acceso denegado.");
+            }
+        });
+
+        // Enter para ingresar
+        inputPass.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                btnConfirmarAdmin.click();
+            }
+        });
+    }
+});
