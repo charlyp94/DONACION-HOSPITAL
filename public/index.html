@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donaciones - Hospital Luis A. Güemes</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo-container">
+            <img src="img/logo.jpg" alt="Logo Hospital Luis A. Güemes" class="logo-img">
+            <div class="logo-texto">
+                <h2>HOSPITAL LUIS A. GÜEMES</h2>
+                <p>A.O. III AGUARAY - SALTA</p>
+            </div>
+        </div>
+        <nav class="menu">
+            <a href="#">Inicio</a>
+            <a href="#destino-donaciones">Destino de Donaciones</a>
+            <a href="#rendicion-cuentas">Transparencia</a>
+        </nav>
+    </header>
+
+    <section class="hero-section">
+        <div class="hero-contenido">
+            <h1>Tu ayuda transforma vidas</h1>
+            <p>Conocé el impacto de tu colaboración y sumate a nuestra misión para mejorar la atención de toda la comunidad.</p>
+            <button id="btnAbrirModal" class="btn-donar">Realizar una Donación</button>
+        </div>
+    </section>
+
+    <section id="destino-donaciones" class="info-section">
+        <h2>¿A dónde se destinan tus donaciones?</h2>
+        
+        <div class="tarjetas-container">
+            <a href="#rendicion-cuentas" class="tarjeta-link">
+                <div class="tarjeta">
+                    <h3>Alimentos</h3>
+                    <p>Destinados al comedor del hospital para pacientes y personal de guardia.</p>
+                </div>
+            </a>
+
+            <a href="#rendicion-cuentas" class="tarjeta-link">
+                <div class="tarjeta">
+                    <h3>Insumos y Enfermería</h3>
+                    <p>Materiales descartables y medicamentos esenciales para la atención diaria.</p>
+                </div>
+            </a>
+
+            <a href="#rendicion-cuentas" class="tarjeta-link">
+                <div class="tarjeta">
+                    <h3>Otros Proyectos</h3>
+                    <p>Mantenimiento edilicio y herramientas para optimizar el taller y las salas.</p>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section id="rendicion-cuentas" class="transparencia-section">
+        <h2>Transparencia y Destino de Fondos</h2>
+        <p class="subtitulo-seccion">Así es como tu colaboración se transforma en acciones reales dentro de nuestro nosocomio.</p>
+        
+        <div class="cronologia-contenedor">
+            <div class="item-destino">
+                <div class="icono-destino">📊</div>
+                <div class="texto-destino">
+                    <h4>Informes Trimestrales</h4>
+                    <p>Cada tres meses se publica el balance de ingresos de insumos en el taller de mantenimiento y stock de enfermería, auditado por la dirección del hospital.</p>
+                </div>
+            </div>
+
+            <div class="item-destino">
+                <div class="icono-destino">🔧</div>
+                <div class="texto-destino">
+                    <h4>Mantenimiento del Taller</h4>
+                    <p>Las donaciones catalogadas como "Otros proyectos" se destinan directamente a la compra de herramientas y refacción de las salas de internación y guardias.</p>
+                </div>
+            </div>
+
+            <div class="item-destino">
+                <div class="icono-destino">🥗</div>
+                <div class="texto-destino">
+                    <h4>Garantía Alimentaria</h4>
+                    <p>El 100% de las donaciones de alimentos no perecederos se registran y derivan a la cocina central para asegurar las viandas de los pacientes internados.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="modalDonacion" class="modal-overlay">
+        <div class="modal-content">
+            <span class="btn-cerrar" id="btnCerrarModal">&times;</span>
+            
+            <h2>Formulario de Donación</h2>
+            <p class="modal-subtitulo">Por favor, completá los siguientes datos para registrar tu intención de donación.</p>
+
+            <form id="formDonacion">
+                <div class="form-grupo">
+                    <label class="label-principal">¿Cómo deseás realizar la donación?</label>
+                    <div class="radio-opciones">
+                        <label class="radio-label">
+                            <input type="radio" name="tipoDonante" value="persona" checked id="radioPersona">
+                            <span>Como Persona</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="tipoDonante" value="empresa" id="radioEmpresa">
+                            <span>Como Empresa</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="camposPersona" class="seccion-dinamica">
+                    <div class="form-grupo">
+                        <label for="nombreCompleto">Nombre Completo</label>
+                        <input type="text" id="nombreCompleto" name="nombreCompleto" placeholder="Ej: Juan Pérez">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-grupo">
+                            <label for="dni">DNI</label>
+                            <input type="text" id="dni" name="dni" placeholder="Ej: 38123456">
+                        </div>
+                        <div class="form-grupo">
+                            <label for="fechaNacimiento">Fecha de Nacimiento</label>
+                            <input type="date" id="fechaNacimiento" name="fechaNacimiento">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="camposEmpresa" class="seccion-dinamica" style="display: none;">
+                    <div class="form-grupo">
+                        <label for="nombreEmpresa">Nombre / Razón Social de la Empresa</label>
+                        <input type="text" id="nombreEmpresa" name="nombreEmpresa" placeholder="Ej: Distribuidora Norte S.A.">
+                    </div>
+                </div>
+
+                <div class="form-grupo">
+                    <label for="correo">Correo Electrónico</label>
+                    <input type="email" id="correo" name="correo" required placeholder="nombre@correo.com">
+                </div>
+
+                <div class="form-grupo">
+                    <label class="label-principal">¿Qué deseás donar? (Podés marcar varias opciones)</label>
+                    <div class="checkbox-opciones">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="categorias" value="alimentos">
+                            <span>Alimentos no perecederos</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="categorias" value="medicamentos">
+                            <span>Medicamentos / Enfermería</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="categorias" value="otros">
+                            <span>Otros insumos o proyectos</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-enviar">Confirmar Intención de Donación</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
