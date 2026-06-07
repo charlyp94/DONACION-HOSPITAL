@@ -1,10 +1,3 @@
-// 1. Protección simple con contraseña al entrar
-const clave = prompt("Ingrese la contraseña de administración:");
-if (clave !== "HospitalGuemes2026") {
-    alert("Acceso denegado.");
-    window.location.href = "index.html";
-}
-
 // 2. Función para cargar y mostrar las donaciones
 async function cargarDonaciones() {
     try {

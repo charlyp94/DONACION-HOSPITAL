@@ -148,6 +148,13 @@ body::before {
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
+/* Efecto hover para el botón de ver historial */
+#btnVerHistorial:hover {
+    background-color: var(--verde-hover);
+    filter: brightness(85%);   /* Esto lo oscurece automáticamente un 15% al pasar el mouse */
+    cursor: pointer;           /* Asegura que aparezca la manito del mouse */
+    transition: background-color 0.3s ease, filter 0.3s ease; /* Hace que el cambio sea suave */
+}
 
 /* ==========================================================================
    5. SECCIÓN INFORMATIVA (Tarjetas de destino)

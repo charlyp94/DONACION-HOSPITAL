@@ -1,5 +1,5 @@
 // ==========================================================================
-// CONTROL DE INTERACCIÓN DEL FORMULARIO DE DONACIONES - HOSPITAL LUIS A. GÜEMES
+// CONTROL DE INTERACCIÓN Y REGISTRO DE DONACIONES - HOSPITAL LUIS A. GÜEMES
 // ==========================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,34 +16,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const camposEmpresa = document.getElementById('camposEmpresa');
     const formDonacion = document.getElementById('formDonacion');
 
-    // --- 2. LOGIC DE APERTURA Y CIERRE DEL MODAL ---
-    
-    // Abrir el formulario flotante
-    btnAbrirModal.addEventListener('click', () => {
-        modal.classList.add('mostrar');
-        document.body.style.overflow = 'hidden'; // Evita que la página del fondo se mueva
-    });
+    // --- 2. LÓGICA DE APERTURA Y CIERRE DEL MODAL ---
+    if (btnAbrirModal) {
+        btnAbrirModal.addEventListener('click', () => {
+            modal.classList.add('mostrar');
+            document.body.style.overflow = 'hidden'; 
+        });
+    }
 
-    // Cerrar desde la "X"
-    btnCerrarModal.addEventListener('click', cerrarModal);
+    if (btnCerrarModal) btnCerrarModal.addEventListener('click', cerrarModal);
 
-    // Cerrar si el usuario hace clic afuera del recuadro blanco (en la zona oscura)
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            cerrarModal();
-        }
-    });
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) cerrarModal();
+        });
+    }
 
     function cerrarModal() {
         modal.classList.remove('mostrar');
-        document.body.style.overflow = 'auto'; // Devuelve el scroll a la página
+        document.body.style.overflow = 'auto'; 
     }
 
     // --- 3. COMPORTAMIENTO DINÁMICO DEL FORMULARIO ---
-    
-    // Escuchamos el cambio en los botones de selección (Radio Buttons)
-    radioPersona.addEventListener('change', alternarCamposFormulario);
-    radioEmpresa.addEventListener('change', alternarCamposFormulario);
+    if (radioPersona && radioEmpresa) {
+        radioPersona.addEventListener('change', alternarCamposFormulario);
+        radioEmpresa.addEventListener('change', alternarCamposFormulario);
+    }
 
     function alternarCamposFormulario() {
         if (radioPersona.checked) {
@@ -59,134 +57,224 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 4. ENVÍO DE DATOS AL SERVIDOR DE NODE.JS ---
-    formDonacion.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    // --- 4. ENVÍO DE DATOS Y GENERACIÓN DEL COMPROBANTE PDF ---
+    if (formDonacion) {
+        formDonacion.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        console.log("¡Hiciste clic en enviar! Intentando mandar los datos...");
-
-        // Capturar cuál radio button está seleccionado
-        const tipoDonante = radioPersona.checked ? 'persona' : 'empresa';
-        const correo = document.getElementById('correo').value;
-        
-        // Capturar los checkboxes de las categorías que estén tildadas
-        const checkboxes = document.querySelectorAll('input[name="categorias"]:checked');
-        const categoriasSeleccionadas = Array.from(checkboxes).map(cb => {
-            return cb.parentNode.querySelector('span')?.innerText || cb.value;
-        });
-        
-        const categoriaFinal = categoriasSeleccionadas.length > 0 ? categoriasSeleccionadas.join(', ') : 'General';
-
-        // CAPTURA SEGURA: Usamos ?.value || '' por si el campo está oculto y no existe en el DOM
-        const datosDonacion = {
-            tipoDonante: tipoDonante,
-            nombreCompleto: document.getElementById('nombreCompleto')?.value || '',
-            nombreEmpresa: document.getElementById('nombreEmpresa')?.value || '',
-            dni: document.getElementById('dni')?.value || null,
-            fechaNacimiento: document.getElementById('fechaNacimiento')?.value || null,
-            correo: correo,
-            categoria: categoriaFinal
-        };
-
-        try {
-            // Mandamos los datos al backend usando la URL relativa
-            const respuesta = await fetch('/api/donaciones', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(datosDonacion)
+            const tipoDonante = radioPersona.checked ? 'persona' : 'empresa';
+            const correo = document.getElementById('correo').value;
+            
+            const checkboxes = document.querySelectorAll('input[name="categorias"]:checked');
+            const categoriasSeleccionadas = Array.from(checkboxes).map(cb => {
+                return cb.parentNode.querySelector('span')?.innerText || cb.value;
             });
+            
+            const categoriaFinal = categoriasSeleccionadas.length > 0 ? categoriasSeleccionadas.join(', ') : 'General';
 
-            const resultado = await respuesta.json();
+            const datosDonacion = {
+                tipoDonante: tipoDonante,
+                nombreCompleto: document.getElementById('nombreCompleto')?.value || '',
+                nombreEmpresa: document.getElementById('nombreEmpresa')?.value || '',
+                dni: document.getElementById('dni')?.value || null,
+                fechaNacimiento: document.getElementById('fechaNacimiento')?.value || null,
+                correo: correo,
+                categoria: categoriaFinal
+            };
 
-            if (respuesta.ok) {
-                alert('¡Excelente! Tu donación fue registrada con éxito en la base de datos del Hospital.');
-                formDonacion.reset(); // Limpiamos el formulario
-                cerrarModal();       // Cerramos la ventana flotante
-            } else {
-                alert('Hubo un problema en el servidor: ' + resultado.error);
+            try {
+                const respuesta = await fetch('/api/donaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosDonacion)
+                });
+
+                const resultado = await respuesta.json();
+
+                if (respuesta.ok) {
+                    
+                    // ✨ CARTEL DE ÉXITO HERMOSO CON SWEETALERT2
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Donación Registrada!',
+                        text: 'Se ha registrado con exito su intencion de donacion, muchas gracias por colaborar con el hospital Luis A. Güemes.',
+                        showConfirmButton: false,
+                        timer: 2500,
+                        iconColor: '#28a745'
+                    });
+
+                    // ==================================================================
+                    // 🚀 BLOQUE DE GENERACIÓN DEL PDF
+                    // ==================================================================
+                    try {
+                        const jsPDF = window.jspdf.jsPDF;
+                        const doc = new jsPDF();
+
+                        const cargarImagenComoBase64 = (url) => {
+                            return new Promise((resolve, reject) => {
+                                const img = new Image();
+                                img.crossOrigin = 'Anonymous';
+                                img.onload = () => {
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = img.width;
+                                    canvas.height = img.height;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(img, 0, 0);
+                                    resolve(canvas.toDataURL('image/jpeg'));
+                                };
+                                img.onerror = (error) => reject(error);
+                                img.src = url;
+                            });
+                        };
+
+                        cargarImagenComoBase64('./img/logo.jpg')
+                            .then((logoBase64) => {
+                                doc.saveGraphicsState();
+                                doc.setGState(new doc.GState({ opacity: 0.12 }));
+                                doc.addImage(logoBase64, 'JPEG', 45, 80, 120, 105);
+                                doc.restoreGraphicsState();
+                                armarContenidoPDF(doc, datosDonacion, tipoDonante);
+                            })
+                            .catch((err) => {
+                                console.error("No se pudo estampar el logo, imprimiendo sin fondo:", err);
+                                armarContenidoPDF(doc, datosDonacion, tipoDonante);
+                            });
+
+                        function armarContenidoPDF(documento, datos, tipo) {
+                            documento.setFont("helvetica", "bold");
+                            documento.setFontSize(22);
+                            documento.textColor(74, 44, 53); // Color #4a2c35
+                            documento.text("HOSPITAL LUIS A. GÜEMES", 105, 25, { align: "center" });
+
+                            documento.setFontSize(14);
+                            documento.textColor(100, 100, 100);
+                            documento.text("Comprobante de Intención de Donación", 105, 35, { align: "center" });
+                            
+                            documento.setDrawColor(74, 44, 53);
+                            documento.setLineWidth(0.5);
+                            documento.line(20, 42, 190, 42);
+
+                            documento.setFont("helvetica", "normal");
+                            documento.setFontSize(12);
+                            documento.textColor(50, 50, 50);
+
+                            let nombreMostrar = tipo === 'persona' ? datos.nombreCompleto : datos.nombreEmpresa;
+                            let documentoTexto = tipo === 'persona' ? `DNI: ${datos.dni || 'No especificado'}` : 'Tipo: Empresa / Institución';
+
+                            documento.text(`Fecha de Emisión: ${new Date().toLocaleDateString('es-AR')}`, 20, 55);
+                            documento.text(`Donante: ${nombreMostrar}`, 20, 65);
+                            documento.text(documentoTexto, 20, 75);
+                            documento.text(`Correo Electrónico: ${datos.correo}`, 20, 85);
+                            
+                            documento.setFillColor(244, 244, 244);
+                            documento.rect(20, 95, 170, 30, "F");
+                            
+                            documento.setFont("helvetica", "bold");
+                            documento.text("Detalle de los Insumos / Categorías Comprometidas:", 25, 105);
+                            documento.setFont("helvetica", "normal");
+                            documento.text(`- ${datos.categoria}`, 25, 115);
+
+                            documento.setFontSize(10);
+                            documento.textColor(120, 120, 120);
+                            documento.text("Este documento es un comprobante automático de registro.", 105, 150, { align: "center" });
+                            documento.text("Muchas gracias por su colaboración y compromiso con nuestra comunidad.", 105, 156, { align: "center" });
+
+                            documento.save(`Comprobante_Donacion_${nombreMostrar.replace(/ /g, "_")}.pdf`);
+                        }
+
+                    } catch (pdfError) {
+                        console.error("Error al procesar el PDF:", pdfError);
+                    }
+                    // ==================================================================
+
+                    formDonacion.reset();
+                    cerrarModal();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error en el servidor',
+                        text: resultado.error,
+                        confirmButtonColor: '#4a2c35'
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin Conexión',
+                    text: 'No se pudo conectar con el servidor. Asegurate de que Node.js esté corriendo.',
+                    confirmButtonColor: '#4a2c35'
+                });
             }
-
-        } catch (error) {
-            console.error('Error en la conexión con el servidor:', error);
-            alert('No se pudo conectar con el servidor. Asegurate de que Node.js esté corriendo.');
-        }
-    });
-
+        });
+    }
 });
-// Esperamos a que el DOM esté listo para asignarle el evento al nuevo botón
-document.addEventListener('DOMContentLoaded', () => {
-    // ... Tu código actual que abre y cierra el modal de donaciones se queda como está ...
 
-    // Nueva lógica para el botón del personal
+// ==========================================================================
+// 🔐 ACCESO ESTÉTICO AL PANEL DE GESTIÓN (CON CARTELES DE ÉXITO Y ERROR)
+// ==========================================================================
+document.addEventListener('DOMContentLoaded', () => {
     const btnPersonal = document.getElementById('btnAccesoPersonal');
+
     if (btnPersonal) {
-        btnPersonal.addEventListener('click', () => {
-            const clave = prompt("Ingrese la contraseña de acceso del personal:");
-            if (clave === "HospitalGuemes2026") {
-                window.location.href = "admin.html"; // Redirige al panel de gestión
-            } else if (clave !== null) {
-                alert("Contraseña incorrecta. Acceso denegado.");
-            }
+        btnPersonal.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation(); 
+
+            Swal.fire({
+                title: 'Acceso Administrativo',
+                text: 'Ingrese la contraseña de acceso del personal:',
+                input: 'password',
+                inputAttributes: {
+                    autocapitalize: 'off',
+                    autocorrect: 'off'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Ingresar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#4a2c35', 
+                cancelButtonColor: '#6c757d',
+                inputPlaceholder: 'Contraseña corporativa',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return '¡Por favor, ingrese la clave de seguridad!';
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (result.value === "saludaguaray") {
+                        
+                        // ✨ NUEVO: CARTEL DE ACCESO CORRECTO HERMOSO
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Acceso Concedido!',
+                            text: 'Contraseña correcta. Redirigiendo al Panel de Gestión...',
+                            showConfirmButton: false,
+                            timer: 2000, // Se muestra por 2 segundos
+                            iconColor: '#28a745'
+                        }).then(() => {
+                            // Una vez que se cierra el cartel, recién ahí te redirige
+                            window.location.href = "admin.html"; 
+                        });
+
+                    } else {
+                        // Cartel de error que ya te gustó como quedaba
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Acceso Denegado',
+                            text: 'Contraseña incorrecta.',
+                            confirmButtonColor: '#4a2c35'
+                        });
+                    }
+                }
+            });
         });
     }
 });
+
 // ==========================================================================
-// CÓDIGO INDEPENDIENTE PARA EL MODAL DE ACCESO AL PERSONAL
-// ==========================================================================
-document.addEventListener('DOMContentLoaded', () => {
-    const btnPersonal = document.getElementById('btnAccesoPersonal');
-    const modalLoginAdmin = document.getElementById('modalLoginAdmin');
-    const btnCerrarLogin = document.getElementById('btnCerrarLogin');
-    const btnConfirmarAdmin = document.getElementById('btnConfirmarAdmin');
-    const inputPass = document.getElementById('passAdmin');
-
-    // Abrir el modal usando display flex directo para no depender de clases CSS
-    if (btnPersonal && modalLoginAdmin) {
-        btnPersonal.addEventListener('click', () => {
-            if (inputPass) inputPass.value = ""; 
-            modalLoginAdmin.style.display = 'flex'; 
-        });
-    }
-
-    // Cerrar desde la "X"
-    if (btnCerrarLogin && modalLoginAdmin) {
-        btnCerrarLogin.addEventListener('click', () => {
-            modalLoginAdmin.style.display = 'none';
-        });
-    }
-
-    // Cerrar si hacen clic afuera en el fondo oscuro
-    if (modalLoginAdmin) {
-        modalLoginAdmin.addEventListener('click', (e) => {
-            if (e.target === modalLoginAdmin) {
-                modalLoginAdmin.style.display = 'none';
-            }
-        });
-    }
-
-    // Validar contraseña
-    if (btnConfirmarAdmin && inputPass) {
-        btnConfirmarAdmin.addEventListener('click', () => {
-            if (inputPass.value === "HospitalGuemes2026") {
-                modalLoginAdmin.style.style.display = 'none';
-                window.location.href = "admin.html"; 
-            } else {
-                alert("Contraseña incorrecta. Acceso denegado.");
-            }
-        });
-
-        // Enter para ingresar
-        inputPass.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                btnConfirmarAdmin.click();
-            }
-        });
-    }
-});
-// ==========================================================================
-// CÓDIGO PARA EL HISTORIAL PÚBLICO DE DONACIONES
+// CÓDIGO UNIFICADO PARA EL HISTORIAL PÚBLICO DE DONACIONES (CON HOVER VISUAL)
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     const btnVerHistorial = document.getElementById('btnVerHistorial');
@@ -194,8 +282,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCerrarHistorial = document.getElementById('btnCerrarHistorial');
     const tablaHistorialCuerpo = document.getElementById('tablaHistorialCuerpo');
 
-    // Abrir modal y cargar datos
-    if (btnVerHistorial && modalHistorial) {
+    // 🎨 EFECTO HOVER INTEGRADO POR JAVASCRIPT
+    if (btnVerHistorial) {
+        // Estilos iniciales base para asegurar suavidad
+        btnVerHistorial.style.transition = 'filter 0.3s ease, background-color 0.3s ease';
+        btnVerHistorial.style.cursor = 'pointer';
+
+        // Cuando el mouse pasa por encima, se oscurece un 15% como los otros botones
+        btnVerHistorial.addEventListener('mouseover', () => {
+            btnVerHistorial.style.filter = 'brightness(85%)';
+        });
+
+        // Cuando el mouse sale, vuelve a la normalidad
+        btnVerHistorial.addEventListener('mouseout', () => {
+            btnVerHistorial.style.filter = 'brightness(100%)';
+        });
+
+        // Abrir modal y disparar consulta asíncrona
         btnVerHistorial.addEventListener('click', () => {
             modalHistorial.style.display = 'flex';
             cargarHistorialPublico();
@@ -216,81 +319,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Función para hacer la petición al servidor
     async function cargarHistorialPublico() {
         try {
             if (!tablaHistorialCuerpo) return;
             tablaHistorialCuerpo.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Cargando historial...</td></tr>';
 
-            const respuesta = await fetch('http://localhost:3000/api/donaciones/aprobadas');
-            const donaciones = await respuesta.json();
-
-            tablaHistorialCuerpo.innerHTML = ''; // Limpiamos el mensaje de carga
-
-            if (donaciones.length === 0) {
-                tablaHistorialCuerpo.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Aún no hay donaciones registradas en este sector.</td></tr>';
-                return;
-            }
-
-            // Recorremos las donaciones y armamos las filas
-            donaciones.forEach(donacion => {
-                const fila = document.createElement('tr');
-                fila.style.borderBottom = '1px solid #eee';
-                
-                // Formateamos la fecha para que quede prolija (DD/MM/AAAA)
-                const fecha = new Date(donacion.fecha).toLocaleDateString('es-AR');
-
-                fila.innerHTML = `
-                    <td style="padding: 10px; font-weight: bold;">${donacion.nombre}</td>
-                    <td style="padding: 10px;">${donacion.categoria}</td>
-                    <td style="padding: 10px; color: #666;">${fecha}</td>
-                `;
-                tablaHistorialCuerpo.appendChild(fila);
-            });
-
-        } catch (error) {
-            console.error('Error al cargar el historial:', error);
-            if (tablaHistorialCuerpo) {
-                tablaHistorialCuerpo.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px; color:red;">No se pudo cargar el historial en este momento.</td></tr>';
-            }
-        }
-    }
-});
-// ==========================================================================
-// AGREGADO EXCLUSIVO PARA EL HISTORIAL PÚBLICO (PEGA ESTO ABAJO DEL TODO)
-// ==========================================================================
-document.addEventListener('DOMContentLoaded', () => {
-    const btnVerHistorial = document.getElementById('btnVerHistorial');
-    const modalHistorial = document.getElementById('modalHistorial');
-    const btnCerrarHistorial = document.getElementById('btnCerrarHistorial');
-    const tablaHistorialCuerpo = document.getElementById('tablaHistorialCuerpo');
-
-    if (btnVerHistorial && modalHistorial) {
-        btnVerHistorial.addEventListener('click', () => {
-            // Usamos el método nativo de tu diseño para abrir modales de forma segura
-            modalHistorial.style.display = 'flex'; 
-            cargarHistorialPublico();
-        });
-    }
-
-    if (btnCerrarHistorial && modalHistorial) {
-        btnCerrarHistorial.addEventListener('click', () => {
-            modalHistorial.style.display = 'none';
-        });
-    }
-
-    window.addEventListener('click', (e) => {
-        if (e.target === modalHistorial) {
-            modalHistorial.style.display = 'none';
-        }
-    });
-
-    async function cargarHistorialPublico() {
-        try {
-            if (!tablaHistorialCuerpo) return;
-            tablaHistorialCuerpo.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Cargando historial...</td></tr>';
-
-            // Usamos ruta relativa segura para evitar problemas de red local
             const respuesta = await fetch('/api/donaciones/aprobadas');
             const donaciones = await respuesta.json();
 
@@ -305,7 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fila = document.createElement('tr');
                 fila.style.borderBottom = '1px solid #eee';
                 
-                // Leemos 'fecha' a secas como lo corregiste en tu MySQL
                 let fechaFormateada = "Sin fecha";
                 if (donacion.fecha) {
                     fechaFormateada = new Date(donacion.fecha).toLocaleDateString('es-AR');

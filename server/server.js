@@ -2,6 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path'); // Modulo nativo para rutas seguras
 
 const app = express();
 const PORT = 3000;
@@ -10,8 +11,9 @@ const PORT = 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Sirve los archivos estáticos de la carpeta "public"
-app.use(express.static('../public')); 
+// 🛠️ CORREGIDO: Servir archivos estáticos usando rutas absolutas seguras.
+// Esto evita que el navegador haga peticiones duplicadas intentando adivinar dónde está el JS.
+app.use(express.static(path.join(__dirname, '../public'))); 
 
 // --- 1. CONFIGURACIÓN DE LA CONEXIÓN A MYSQL ---
 const db = mysql.createConnection({
@@ -29,6 +31,9 @@ db.connect((err) => {
     console.log('¡Conectado exitosamente a la base de datos hospital_guemes!');
 });
 
+// Cache temporal para evitar que registros idénticos entren duplicados en ráfaga (Anti-Bounce)
+let ultimaDonacionCache = null;
+
 // --- 2. RUTA POST: RECIBIR Y GUARDAR DONACIÓN ---
 app.post('/api/donaciones', (req, res) => {
     const { tipoDonante, nombreCompleto, nombreEmpresa, dni, fechaNacimiento, correo, categoria } = req.body;
@@ -36,6 +41,17 @@ app.post('/api/donaciones', (req, res) => {
     const nombreFinal = (tipoDonante === 'empresa') ? nombreEmpresa : nombreCompleto;
     const dniFinal = (tipoDonante === 'persona') ? dni : null;
     const fechaNacFinal = (tipoDonante === 'persona') ? fechaNacimiento : null;
+
+    // 🛑 BLINDAJE ANTI-DUPLICACIÓN: Si los datos son exactamente iguales al envío de hace menos de 2 segundos, lo frena.
+    const claveEnvioActual = `${correo}-${categoria}-${nombreFinal}`;
+    if (ultimaDonacionCache === claveEnvioActual) {
+        console.log('⚠️ Petición duplicada bloqueada en el servidor para evitar clonación en MySQL.');
+        return res.status(200).json({ mensaje: 'Donación ya procesada anteriormente.', duplicado: true });
+    }
+
+    // Guardamos en cache por 2 segundos este envío
+    ultimaDonacionCache = claveEnvioActual;
+    setTimeout(() => { ultimaDonacionCache = null; }, 2000);
 
     const sql = `INSERT INTO donaciones (tipo_donante, nombre, dni, fecha_nacimiento, correo, categoria, estado) 
                  VALUES (?, ?, ?, ?, ?, ?, 'Pendiente')`;
@@ -47,7 +63,7 @@ app.post('/api/donaciones', (req, res) => {
             console.error('Error al insertar donación:', err);
             return res.status(500).json({ error: 'Error al guardar la donación.' });
         }
-        res.status(201).json({ mensaje: 'Donación registrada como Pendiente.', id: result.insertId });
+        return res.status(201).json({ mensaje: 'Donación registrada como Pendiente.', id: result.insertId });
     });
 });
 
@@ -59,12 +75,12 @@ app.get('/api/donaciones', (req, res) => {
             console.error('Error al obtener donaciones:', err);
             return res.status(500).json({ error: 'Error al obtener datos.' });
         }
-        res.json(results);
+        return res.json(results);
     });
 });
+
 // --- RUTA GET PÚBLICA: OBTENER SOLO LAS DONACIONES APROBADAS ---
 app.get('/api/donaciones/aprobadas', (req, res) => {
-    // Filtramos en la consulta SQL para traer solo las aprobadas y ordenadas por las más recientes
     const sql = "SELECT nombre, categoria, fecha FROM donaciones WHERE estado = 'Aprobado y Destinado' ORDER BY id DESC";
     
     db.query(sql, (err, results) => {
@@ -72,9 +88,10 @@ app.get('/api/donaciones/aprobadas', (req, res) => {
             console.error('Error al obtener el historial público:', err);
             return res.status(500).json({ error: 'Error al obtener el historial.' });
         }
-        res.json(results);
+        return res.json(results);
     });
 });
+
 // --- 4. RUTA PUT: ACTUALIZAR EL ESTADO DE LA DONACIÓN ---
 app.put('/api/donaciones/:id/estado', (req, res) => {
     const { id } = req.params;
@@ -98,7 +115,7 @@ app.put('/api/donaciones/:id/estado', (req, res) => {
             return res.status(404).json({ error: 'Donación no encontrada.' });
         }
 
-        res.json({ mensaje: 'Estado actualizado con éxito.', nuevoEstado });
+        return res.json({ mensaje: 'Estado actualizado con éxito.', nuevoEstado });
     });
 });
 
