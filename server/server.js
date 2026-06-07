@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const path = require('path'); // Modulo nativo para rutas seguras
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // --- MIDDLEWARES ---
 app.use(cors());
@@ -120,6 +120,6 @@ app.put('/api/donaciones/:id/estado', (req, res) => {
 });
 
 // --- INICIAR SERVIDOR ---
-app.listen(PORT, () => {
-    console.log(`Servidor de la Práctica 3 corriendo en http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
