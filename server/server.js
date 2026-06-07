@@ -15,12 +15,14 @@ app.use(bodyParser.json());
 // Esto evita que el navegador haga peticiones duplicadas intentando adivinar dónde está el JS.
 app.use(express.static(path.join(__dirname, '../public'))); 
 
-// --- 1. CONFIGURACIÓN DE LA CONEXIÓN A MYSQL ---
+// 🔐 CONFIGURACIÓN DE CONEXIÓN SEGURA Y DINÁMICA
+// En tu PC usará los datos locales; en internet leerá las variables ocultas del servidor.
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'ies6039',
-    database: 'hospital_guemes'
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'ies6039',
+    database: process.env.DB_NAME || 'hospital_guemes',
+    port: process.env.DB_PORT || 3306
 });
 
 db.connect((err) => {
